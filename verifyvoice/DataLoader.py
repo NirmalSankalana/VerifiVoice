@@ -1,18 +1,15 @@
 import random
 
-import soundfile
+import soundfile as sf
 import numpy as np
 
 
 class DataLoader:
-    @staticmethod
-    def loadWAV(filename, max_frames, evalmode=True, num_eval=10):
-
-        # Maximum audio length
+    def load_audio(filename: str, max_frames: int, num_eval=10):
         max_audio = max_frames * 160 + 240
 
         # Read wav file and convert to torch tensor
-        audio, sample_rate = soundfile.read(filename)
+        audio, sample_rate = sf.read(filename)
 
         audiosize = audio.shape[0]
 
@@ -21,14 +18,10 @@ class DataLoader:
             audio = np.pad(audio, (0, shortage), 'wrap')
             audiosize = audio.shape[0]
 
-        if evalmode:
-            startframe = np.linspace(0, audiosize-max_audio, num=num_eval)
-        else:
-            startframe = np.array(
-                [np.int64(random.random()*(audiosize-max_audio))])
+        startframe = np.linspace(0, audiosize-max_audio, num=num_eval)
 
         feats = []
-        if evalmode and max_frames == 0:
+        if max_frames == 0:
             feats.append(audio)
         else:
             for asf in startframe:
@@ -37,3 +30,8 @@ class DataLoader:
         feat = np.stack(feats, axis=0).astype(np.float64)
 
         return feat
+
+
+if __name__ == "__main__":
+    f = DataLoader.load_audio("../samples/dr-uthaya-e1.mp3", 160)
+    print(f)
