@@ -3,8 +3,9 @@ import random
 import soundfile as sf
 import numpy as np
 
-
 class DataLoader:
+
+    @staticmethod
     def load_audio(filename: str, max_frames: int, num_eval=10):
         max_audio = max_frames * 160 + 240
 

@@ -7,6 +7,5 @@ setup(
     author='Nirmal Sankalana, Nipun Fonseka',
     author_email='your_email@example.com',
     packages=find_packages(),
-    # Add other options if needed (e.g., dependencies, entry points)
     install_requires=['numpy', 'soundfile', 'onnxruntime']
 )
