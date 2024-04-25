@@ -18,7 +18,7 @@ setup(
     description="A package for verifying the voice of a person",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="nirmalsankalana.github.io",
+    url="https://github.com/NirmalSankalana/VerifiVoice",
     author="Nirmal Sankalana, Nipun Thejan",
     author_email="sankalana.nirmal@gmail.com",
     license="MIT",
