@@ -1,5 +1,6 @@
 import numpy as np
-from verifyvoice.model.inference import  get_emb
+from verifyvoice import  get_emb
+
 
 test_path = '/media/thejan/ubuntu_data/wav_test/'
 filename = test_path + 'id10270/5r0dWxy17C8/00001.wav'
