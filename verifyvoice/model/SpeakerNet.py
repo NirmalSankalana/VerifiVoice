@@ -10,9 +10,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from DatasetLoader import test_dataset_loader
-import DatasetLoader
-import os
+from verifyvoice.model.DatasetLoader import test_dataset_loader
+import verifyvoice.model.DatasetLoader
+from verifyvoice.model.loss.deepInfoMaxLoss import DeepInfoMaxLoss
+from verifyvoice.model.models.Baseline.Spk_Encoder import MainModel
+from verifyvoice.model.loss.aamsoftmax import LossFunction
 
 class WrappedModel(nn.Module):
 
@@ -31,11 +33,10 @@ class SpeakerNet(nn.Module):
     def __init__(self, model, optimizer, trainfunc, nPerSpeaker, **kwargs):
         super(SpeakerNet, self).__init__();
 
-        SpeakerNetModel = importlib.import_module(f'models.{model}').__getattribute__('MainModel')
-        self.__S__ = SpeakerNetModel(**kwargs);
+        self.__S__ = MainModel(**kwargs);
 
-        LossFunction = importlib.import_module(f'loss.{trainfunc}').__getattribute__('LossFunction')
         self.__L__ = LossFunction(**kwargs);
+        self.__DIM_L__ = DeepInfoMaxLoss(alpha=kwargs['alpha'], beta=kwargs['beta'], gamma=kwargs['gamma'])
 
         self.nPerSpeaker = nPerSpeaker
         self.weight_finetuning_reg = kwargs['weight_finetuning_reg']
@@ -55,7 +56,8 @@ class SpeakerNet(nn.Module):
             # print(f"label shape= {len(label)}")
             # print(f"M trans before == {M.shape}")
 
-            M = M.transpose(0, 1)
+            M = M.transpose(0, 1).transpose(1, 2)
+    
             # print(f"M == {M.shape}")
             # print(f"{M=}")
 
@@ -75,7 +77,10 @@ class SpeakerNet(nn.Module):
             # print(M_prime)
             # print(f"ffffffffffffffff {torch.eq(M[0], M_prime[-1])}\n")
             # print(f"ffffffffffffffff2222 {torch.eq(M[1], M_prime[0])}\n")
-            nloss, prec1 = self.__L__.forward(outp, M, M_prime, label)
+            nloss, prec1 = self.__L__.forward(outp, label)
+
+
+
             if l2_reg_dict is not None:
                 Learned_dict = l2_reg_dict
                 l2_reg = 0
@@ -87,7 +92,15 @@ class SpeakerNet(nn.Module):
                 tloss = nloss
                 # print("Without L2 Reg")
 
-            return tloss, prec1, nloss
+            dim_loss = self.__DIM_L__(outp, M, M_prime)
+
+            # add loss
+            t_loss = tloss + dim_loss
+
+
+            print(f"classification Loss: {tloss}, skloss {nloss} , DIM Loss: {dim_loss} total loss {t_loss} \n")
+
+            return t_loss, prec1, nloss
 
 
 class ModelTrainer(object):
@@ -95,10 +108,46 @@ class ModelTrainer(object):
     def __init__(self, speaker_model, optimizer, scheduler, gpu, mixedprec, **kwargs):
 
         self.__model__ = speaker_model
+        # print(f'{self.__model__=}')
+        # print(f'{len(list(self.__model__.parameters()))=}')
 
+
+        # print(f"\n\n\n")
         WavLM_params = list(map(id, self.__model__.module.__S__.model.parameters()))
-        # print(f"self.__model__.module.__S__.model.parameters() = {len(list(self.__model__.module.__S__.model.parameters()))}")
-        Backend_params = filter(lambda p: id(p) not in WavLM_params, self.__model__.module.parameters())
+        DIM_params = list(map(id, self.__model__.module.__DIM_L__.parameters()))
+        # print(f"self.__model__.module.__S__.model.parameters() = {self.__model__.module.__S__.model}")
+        # Backend_params = filter(lambda p: id(p) not in WavLM_params, self.__model__.module.parameters())
+        Backend_params = filter(lambda p: id(p) not in WavLM_params and id(p) not in DIM_params, self.__model__.module.parameters())
+
+        # print(f"Backend_params = {len(list(Backend_params))}")
+        # print(f"WavLM_params = {len(list(WavLM_params))}")
+        # print(f"DIM_params = {len(list(DIM_params))}")
+
+        # print(f"param self.__model__.module {sum(p.numel() for p in self.__model__.module.parameters())}")
+        # print(f"param self.__model__.module.__S__ {sum(p.numel() for p in self.__model__.module.__S__.parameters())}")
+        # print(f"param self.__model__.module.__S__.model {sum(p.numel() for p in self.__model__.module.__S__.model.parameters())}")
+        # print(f"param self.__model__.module.__S__.backend {sum(p.numel() for p in self.__model__.module.__S__.backend.parameters())}")
+        # print(f"param self.__model__.module.__DIM_L__ {sum(p.numel() for p in self.__model__.module.__DIM_L__.parameters())}")
+        # print(f"param self.__model__.module.__L__ {sum(p.numel() for p in self.__model__.module.__L__.parameters())}")
+
+        # quit()
+        # print(f"{len(list(map(id, self.__model__.module.parameters())))=}")
+        # print(f"\n\n\n")
+        # # print(f"self.__model__.module.parameters() = {self.__model__.module}")
+        # print(f"\n\n\n")
+        # # print(f"{self.__model__.module.__L__}")
+        # print(f"{len(list(map(id, self.__model__.module.__L__.DIMLoss.parameters())))=}")
+        
+
+        # for i in Backend_params:
+        #     print(i)
+        # print(f"{self.__model__.module}")
+        # print()
+        # print()
+        # print(f"{self.__model__.module.__S__.model}")
+        # print(f"{list(Backend_params)=}")
+        # print(f"{WavLM_params=}")
+
         self.path = kwargs['pretrained_model_path']
 
         Optimizer = importlib.import_module(f'optimizer.{optimizer}').__getattribute__('Optimizer')
@@ -117,13 +166,14 @@ class ModelTrainer(object):
 
         # Initialize the optimizer with these param groups
         self.__optimizer__ = Optimizer(param_groups, **kwargs)
-        # self.__optimizer__dim__ = Optimizer(param_groups, lr=1e-4)
+        self.__optimizer__dim__ = Optimizer(self.__model__.module.__DIM_L__.parameters(), lr=1e-4)
 
 
         # self.__optimizer__ = Optimizer(self.__model__.parameters(), **kwargs)
 
         Scheduler = importlib.import_module(f'scheduler.{scheduler}').__getattribute__('Scheduler')
         self.__scheduler__, self.lr_step = Scheduler(self.__optimizer__, **kwargs)
+        # self.__scheduler__dim__, self.lr_step_dim = Scheduler(self.__optimizer__dim__, **kwargs)
 
         # self.scaler = GradScaler() 
 
@@ -168,6 +218,7 @@ class ModelTrainer(object):
             nloss.backward();
 
             self.__optimizer__.step();
+            self.__optimizer__dim__.step();
 
             loss += spkloss.detach().cpu()
             top1 += prec1.detach().cpu()
@@ -239,32 +290,32 @@ class ModelTrainer(object):
 
             inp1 = data[0][0].cuda()
             inp2 = data[1][0].cuda()
-            print(f"{inp1=}")
-            print(f"{inp2=}")
-            print(f"{inp1.shape=}")
-            print(f"{inp2.shape=}")
-            print(f"{len(data)=}")
-            print(f"{len(data[0])=}")
-            print(f"{len(data[0][0])=}")
-            print(f"{data[0][0].shape=}")
+            # print(f"{inp1=}")
+            # print(f"{inp2=}")
+            # print(f"{inp1.shape=}")
+            # print(f"{inp2.shape=}")
+            # print(f"{len(data)=}")
+            # print(f"{len(data[0])=}")
+            # print(f"{len(data[0][0])=}")
+            # print(f"{data[0][0].shape=}")
 
             telapsed_2 = time.time()
             b, utt_l = inp2.shape
             if utt_l > max_len:
                 max_len = utt_l
             ref_feat = self.__model__([inp1, "test"]).cuda()
-            print(f"{ref_feat.shape=}")
-            print(f"{ref_feat=}")
+            # print(f"{ref_feat.shape=}")
+            # print(f"{ref_feat=}")
 
             ref_feat = ref_feat.detach().cpu()
 
             ref_feat_2 = self.__model__(
                 [inp2[:, :700000], "test"]).cuda()  # The reason why here is set to 700000 is due to GPU memory size.
             ref_feat_2 = ref_feat_2.detach().cpu()
-            print(f"{ref_feat_2.shape=}")
-            print(f"{ref_feat_2=}")
-            print(f"{data[2][0]=}")
-            print(f"{data=}")
+            # print(f"{ref_feat_2.shape=}")
+            # print(f"{ref_feat_2=}")
+            # print(f"{data[2][0]=}")
+            # print(f"{data=}")
 
             feats[data[2][0]] = [ref_feat, ref_feat_2]
 
@@ -334,6 +385,9 @@ class ModelTrainer(object):
 
     def saveParameters(self, path):
         torch.save(self.__model__.module.state_dict(), path);
+    
+    def save_model(self, path):
+        torch.save(self.__model__, path);
 
     # ===== ===== ===== ===== ===== ===== ===== =====
     # Load parameters
@@ -343,6 +397,7 @@ class ModelTrainer(object):
         self_state = self.__model__.module.state_dict();
         loaded_state = torch.load(path, map_location="cuda:%d" % self.gpu);
         # loaded_state = torch.load(path, map_location="cpu");
+        # print(f"gggggggggggb {loaded_state.keys()=}")
 
         for name, param in loaded_state.items():
             origname = name;
@@ -373,7 +428,7 @@ class ModelTrainer(object):
         # Read all lines
         with open(test_list) as f:
             lines = f.readlines()
-        # print(lines)
+        print(lines)
 
         num_samples = int(len(lines) * test_list_percentage)
         print(f"test datset : {len(lines)}")
@@ -402,7 +457,7 @@ class ModelTrainer(object):
         # max_len = 0
         # forward = 0
 
-        audio = DatasetLoader.loadWAV(filename, max_frames=300, evalmode=True, num_eval=1)
+        audio = DatasetLoader.loadWAV(filename,max_frames=300, evalmode=True, num_eval=1)
         audio = torch.FloatTensor(audio)
         inp1 = audio.cuda()
         

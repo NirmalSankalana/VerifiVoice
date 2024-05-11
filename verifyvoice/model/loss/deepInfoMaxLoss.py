@@ -1,20 +1,24 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from mine.mine import GlobalDiscriminator
-from mine.mine import LocalDiscriminator
+from verifyvoice.model.mine.mine import GlobalDiscriminator
+from verifyvoice.model.mine.mine import LocalDiscriminator
 import numpy as np
-# from mine.mine import PriorDiscriminator
+from verifyvoice.model.mine.mine import PriorDiscriminator
 
 class DeepInfoMaxLoss(nn.Module):
-    def __init__(self, alpha=0.01, beta=0.05, gamma=0):
+    def __init__(self, alpha, beta, gamma):
         super().__init__()
         self.global_d = GlobalDiscriminator()
         self.local_d = LocalDiscriminator()
-        # self.prior_d = PriorDiscriminator()
+        self.prior_d = PriorDiscriminator()
         self.alpha = alpha
         self.beta = beta
         self.gamma = gamma
+        print(
+            "Initialised DeepInfoMaxLoss alpha %.4f beta %.4f gamma %.4f"
+            % (self.alpha, self.beta, self.gamma)
+        )
 
     def forward(self, y, M, M_prime):
 
@@ -23,7 +27,10 @@ class DeepInfoMaxLoss(nn.Module):
         y_exp_b = y.unsqueeze(-1)
         # # print(f"{y_M_primey_exp.shape} =")
         # print(f"before exapnd{y_exp_b.shape=} ")
-        y_exp = y_exp_b.expand(-1, -1, 768)
+
+        # y_exp = y_exp_b.expand(-1, -1, 768)
+        y_exp = y_exp_b.expand(-1, -1, 150)
+
         # print(f"after exapnd{y_exp.shape=} ")
         # print(f"{y_exp_b=}")
         # print(f"{y_exp=}")
@@ -67,19 +74,22 @@ class DeepInfoMaxLoss(nn.Module):
         # Em_global_scaled = ((Em_global - Em_global.min()) / (Em_global.max() - Em_global.min())).mean()
         GLOBAL = (Em_global - Ej_global)
 
-        # prior = torch.rand_like(y)
+        prior = torch.rand_like(y)
 
-        # term_a = torch.log(self.prior_d(prior)).mean()
-        # term_b = torch.log(1.0 - self.prior_d(y)).mean()
-        # PRIOR = - (term_a + term_b) * self.gamma
+        term_a = torch.log(self.prior_d(prior)).mean()
+        term_b = torch.log(1.0 - self.prior_d(y)).mean()
+        PRIOR = - (term_a + term_b) 
         print()
-        print(f"not mul LOCAL: {LOCAL}, GLOBAL: {GLOBAL} , DIM; {LOCAL + GLOBAL}")
+        print(f"not mul LOCAL: {LOCAL}, GLOBAL: {GLOBAL} ,PRIOR: {PRIOR}, DIM; {LOCAL + GLOBAL + PRIOR}")
+        print()
         LOCAL = LOCAL * self.beta
         GLOBAL = GLOBAL * self.alpha
-        print(f"with alpha beta : LOCAL: {LOCAL}, GLOBAL: {GLOBAL} , DIM; {LOCAL + GLOBAL}")
+        PRIOR = PRIOR * self.gamma
+        print()
+        print(f"with alpha beta : LOCAL: {LOCAL}, GLOBAL: {GLOBAL} ,PRIOR: {PRIOR}, DIM; {LOCAL + GLOBAL + PRIOR}")
 
 
-        return LOCAL + GLOBAL
+        return LOCAL + GLOBAL + PRIOR
 
 
 
