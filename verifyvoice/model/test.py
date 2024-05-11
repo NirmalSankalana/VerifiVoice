@@ -124,5 +124,7 @@ print(inp1)
 print(inp1.shape)
 
 ref_feat = s([inp1, "test"]).cuda()
+ref_feat = ref_feat.detach().cpu()
+
 print(ref_feat.shape)
 print(ref_feat)

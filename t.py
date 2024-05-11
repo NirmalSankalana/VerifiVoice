@@ -4,6 +4,7 @@ import os
 import argparse
 from verifyvoice.model.DatasetLoader import loadWAV
 
+from verifyvoice.Similarity import Similarity
 os.environ['CUDA_VISIBLE_DEVICES'] = '0,1'
 
 parser = argparse.ArgumentParser(description="SpeakerNet");
@@ -105,8 +106,8 @@ args.gpu = 0
 
 model_path='/home/thejan/Downloads/model000000013.model'
 model = torch.load(model_path)
-for i in model.keys():
-    print(i)
+# for i in model.keys():
+#     print(i)
 
 s = SpeakerNet(**vars(args)).cuda(args.gpu)
 # s = WrappedModel(s)
@@ -117,12 +118,45 @@ s.load_state_dict(model)
 # # model = torch.load(model_path)
 # # print(model.keys())
 s.eval()
-audio_path = '/media/thejan/ubuntu_data/wav_test/id10270/5r0dWxy17C8/00001.wav'
-inp1 = loadWAV(filename=audio_path, max_frames=300, evalmode=True, num_eval=10)
-inp1=torch.FloatTensor(inp1)
-print(inp1)
-print(inp1.shape)
+# audio_path = '/media/thejan/ubuntu_data/wav_test/id10270/5r0dWxy17C8/00001.wav'
+# inp1 = loadWAV(filename=audio_path, max_frames=300, evalmode=True, num_eval=10)
+# inp1=torch.FloatTensor(inp1)
+# print(inp1)
+# print(inp1.shape)
 
-ref_feat = s([inp1, "test"]).cuda()
-print(ref_feat.shape)
-print(ref_feat)
+# ref_feat = s([inp1, "test"]).cuda()
+# print(ref_feat.shape)
+# print(ref_feat)
+torch.cuda.empty_cache()
+
+spk_1_audio_1_path = '/media/thejan/ubuntu_data/wav_test/id10270/OmSWVqpb-N0/00001.wav'
+spk_1_audio_2_path = '/media/thejan/ubuntu_data/wav_test/id10270/5r0dWxy17C8/00001.wav'
+
+spk_2_audio_1_path = '/media/thejan/ubuntu_data/wav_test/id10282/37XQxZ5lBD8/00001.wav'
+
+spk_1_audio_1 = loadWAV(spk_1_audio_1_path)
+spk_1_audio_2 = loadWAV(spk_1_audio_2_path)
+spk_2_audio_1 = loadWAV(spk_2_audio_1_path)
+torch.cuda.empty_cache()
+
+spk_1_audio_1=torch.FloatTensor(spk_1_audio_1)
+spk_1_audio_2=torch.FloatTensor(spk_1_audio_2)
+spk_2_audio_1=torch.FloatTensor(spk_2_audio_1)
+
+spk_1_aud_1_emb = s([spk_1_audio_1, "test"]).cuda()
+spk_1_aud_1_emb = spk_1_aud_1_emb.detach().cpu().numpy()
+# print(f"{spk_1_aud_1_emb.shape=}")
+# print(f"{spk_1_aud_1_emb=}")
+
+spk_1_aud_2_emb = s([spk_1_audio_2, "test"]).cuda()
+spk_1_aud_2_emb = spk_1_aud_2_emb.detach().cpu().numpy()
+
+spk_2_aud_1_emb = s([spk_2_audio_1, "test"]).cuda()
+spk_2_aud_1_emb = spk_2_aud_1_emb.detach().cpu().numpy()
+
+
+print(f'Similarity of Same Speaker : {Similarity.cosine(spk_1_aud_1_emb, spk_1_aud_2_emb)}')
+print(f'Similarity of Same Speaker 1: {Similarity.eer(spk_1_aud_1_emb, spk_1_aud_2_emb)}')
+
+print(f'Similarity of Different Speaker ; {Similarity.cosine(spk_1_aud_1_emb, spk_2_aud_1_emb)}')
+print(f'Similarity of Different Speaker 1; {Similarity.eer(spk_1_aud_1_emb, spk_2_aud_1_emb)}')
