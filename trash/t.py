@@ -156,7 +156,7 @@ spk_2_aud_1_emb = spk_2_aud_1_emb.detach().cpu().numpy()
 
 
 print(f'Similarity of Same Speaker : {Similarity.cosine(spk_1_aud_1_emb, spk_1_aud_2_emb)}')
-print(f'Similarity of Same Speaker 1: {Similarity.eer(spk_1_aud_1_emb, spk_1_aud_2_emb)}')
+# print(f'Similarity of Same Speaker 1: {Similarity.eer(spk_1_aud_1_emb, spk_1_aud_2_emb)}')
 
 print(f'Similarity of Different Speaker ; {Similarity.cosine(spk_1_aud_1_emb, spk_2_aud_1_emb)}')
-print(f'Similarity of Different Speaker 1; {Similarity.eer(spk_1_aud_1_emb, spk_2_aud_1_emb)}')
+# print(f'Similarity of Different Speaker 1; {Similarity.eer(spk_1_aud_1_emb, spk_2_aud_1_emb)}')

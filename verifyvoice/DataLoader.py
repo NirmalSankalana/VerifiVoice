@@ -8,9 +8,9 @@ class DataLoader:
 
     @staticmethod
     def load_audio(filename: str, max_frames: int = 300, num_eval=10):
-        max_audio = max_frames * 160 + 240
 
-        # Read wav file and convert to torch tensor
+        max_audio = max_frames * 160 + 240
+        
         audio, sample_rate = sf.read(filename)
 
         audiosize = audio.shape[0]
@@ -20,14 +20,12 @@ class DataLoader:
             audio = np.pad(audio, (0, shortage), 'wrap')
             audiosize = audio.shape[0]
 
-        startframe = np.linspace(0, audiosize-max_audio, num=num_eval)
+        startframe = np.array([np.int64(random.random()*(audiosize-max_audio))])
 
         feats = []
-        if max_frames == 0:
-            feats.append(audio)
-        else:
-            for asf in startframe:
-                feats.append(audio[int(asf):int(asf)+max_audio])
+        
+        for asf in startframe:
+            feats.append(audio[int(asf):int(asf)+max_audio])
 
         feat = np.stack(feats, axis=0).astype(np.float64)
 

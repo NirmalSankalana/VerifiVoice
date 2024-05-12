@@ -22,7 +22,7 @@ def worker_init_fn(worker_id):
     numpy.random.seed(numpy.random.get_state()[1][0] + worker_id)
 
 
-def loadWAV(filename, max_frames=300, evalmode=True, num_eval=1):
+def loadWAV(filename, max_frames=300, evalmode=False, num_eval=5):
 
     # Maximum audio length
     max_audio = max_frames * 160 + 240
