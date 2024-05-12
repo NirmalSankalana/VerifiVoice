@@ -55,7 +55,7 @@ class spk_extractor(nn.Module):
         cfg = WavLMConfig(checkpoint['cfg'])
         self.model = WavLM(cfg)
         self.loadParameters(checkpoint['model'])
-        head_nb = 8
+        head_nb = kwargs['attention_heads']
         self.backend = MHFA(head_nb=head_nb)
         print(f"Number of Heads : {head_nb}")
 
