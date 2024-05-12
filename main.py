@@ -2,7 +2,11 @@ from verifyvoice import ModelLoader
 from verifyvoice import Similarity
 
 model_path='/home/thejan/Downloads/model000000013.model'
-
+"""
+TODO: need to make ModelLoader function take attention heads and model like Wavlm and param
+and in side load required model weights
+and if not saved in cashe folder, download from hugging face
+"""
 model = ModelLoader(model_path=model_path)
 
 spk_1_audio_1_path = '/media/thejan/ubuntu_data/wav_test/id10270/OmSWVqpb-N0/00001.wav'
