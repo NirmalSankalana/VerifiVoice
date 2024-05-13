@@ -32,7 +32,7 @@ class ModelLoader:
         args["attention_heads"] = attention_heads
         self.model_name = model_head_mapping[attention_heads]
         self.model_path = model_path
-        self.model =SpeakerNet(**args).cuda(0)
+        self.model =SpeakerNet(**args).to(args['device'])
         self.load_model(self.model, self.model_name, self.model_path)
 
     def get_embedding(self, audio_path):
@@ -55,5 +55,5 @@ class ModelLoader:
             # Save the downloaded model to the desired folder
             # torch.hub.download_url_to_file(model_url, model_file)
         # Load the model from the local file
-        model.load_state_dict(torch.load(model_file))        
+        model.load_state_dict(torch.load(model_file, map_location=torch.device(args['device'])))        
         model.eval()

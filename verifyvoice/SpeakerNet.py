@@ -28,24 +28,25 @@ class WrappedModel(nn.Module):
 
 class SpeakerNet(nn.Module):
 
-    def __init__(self, model, optimizer, trainfunc, nPerSpeaker, **kwargs):
+    def __init__(self, model, optimizer, trainfunc, nPerSpeaker, device, **kwargs):
         super(SpeakerNet, self).__init__();
 
-        self.__S__ = MainModel(**kwargs);
+        self.__S__ = MainModel(device,**kwargs);
 
         self.__L__ = LossFunction(**kwargs);
         self.__DIM_L__ = DeepInfoMaxLoss(alpha=kwargs['alpha'], beta=kwargs['beta'], gamma=kwargs['gamma'])
 
         self.nPerSpeaker = nPerSpeaker
         self.weight_finetuning_reg = kwargs['weight_finetuning_reg']
+        self.device = device
 
     def forward(self, data, label=None, l2_reg_dict=None):
         if label is None:
-            data_reshape = data[0].cuda()
+            data_reshape = data[0].to(self.device)
             outp, M = self.__S__.forward([data_reshape, data[1]])
             return outp
         else:
-            data_reshape = data[0].reshape(-1, data[0].size()[-1]).cuda()
+            data_reshape = data[0].reshape(-1, data[0].size()[-1]).to(self.device)
             outp, M = self.__S__.forward([data_reshape, data[1]])
 
             M = M.transpose(0, 1).transpose(1, 2)

@@ -48,10 +48,10 @@ class MHFA(nn.Module):
 
 
 class spk_extractor(nn.Module):
-    def __init__(self,**kwargs):
+    def __init__(self,device,**kwargs):
         super(spk_extractor, self).__init__()
         # print("Pre-trained Model: {}".format(kwargs['pretrained_model_path']))
-        checkpoint = torch.load(kwargs['pretrained_model_path'])
+        checkpoint = torch.load(kwargs['pretrained_model_path'], map_location=torch.device(device))
         cfg = WavLMConfig(checkpoint['cfg'])
         self.model = WavLM(cfg)
         self.loadParameters(checkpoint['model'])
@@ -87,6 +87,6 @@ class spk_extractor(nn.Module):
                 continue;
             self_state[name].copy_(param);
 
-def MainModel(**kwargs):
-    model = spk_extractor(**kwargs)
+def MainModel(device,**kwargs):
+    model = spk_extractor(device, **kwargs)
     return model
