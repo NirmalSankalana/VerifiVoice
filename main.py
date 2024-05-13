@@ -20,6 +20,6 @@ emb2 = model.get_embedding(spk_1_audio_2_path)
 emb3 = model.get_embedding(spk_2_audio_1_path)
 emb4 = model.get_embedding(spk_1_audio_3_path)
 
-
+print()
 print(f'Similarity of Same Speaker : {Similarity.cosine(emb1, emb2)}')
 print(f'Similarity of Different Speaker ; {Similarity.cosine(emb2, emb4)}')

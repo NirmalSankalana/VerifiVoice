@@ -1,12 +1,11 @@
 import numpy as np
-from verifyvoice.DataLoader import DataLoader
+from .DataLoader import DataLoader
 import torch
-from verifyvoice.model.SpeakerNet import SpeakerNet
 import os
-import argparse    
 from huggingface_hub import hf_hub_download
-from verifyvoice.model_args import get_default_param
+from .model_args import get_default_param
 import requests
+from .SpeakerNet import SpeakerNet
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
@@ -30,10 +29,10 @@ model_name_download_mapping = {
 
 class ModelLoader:
     def __init__(self, model_name, attention_heads=8):
-        args.attention_heads = attention_heads
+        args["attention_heads"] = attention_heads
         self.model_name = model_head_mapping[attention_heads]
         self.model_path = model_path
-        self.model =SpeakerNet(**vars(args)).cuda(args.gpu)
+        self.model =SpeakerNet(**args).cuda(0)
         self.load_model(self.model, self.model_name, self.model_path)
 
     def get_embedding(self, audio_path):
@@ -50,9 +49,9 @@ class ModelLoader:
             # Download the model from Hugging Face if not available locally
             # model_url = hf_hub_download(repo_id=model_name, filename=f"{model_name}.pt", cache_dir=cache_dir)
             # os.makedirs(model_path, exist_ok=True)
-            print("downloading model")
+            # print("downloading model")
             model_file = hf_hub_download(repo_id="thejan-fonseka/DeepSpeakerVerifier", filename=model_name)
-            print(f"downloaded model {model_name} from hugging face saved to {model_file}")
+            # print(f"downloaded model {model_name} from hugging face saved to {model_file}")
             # Save the downloaded model to the desired folder
             # torch.hub.download_url_to_file(model_url, model_file)
         # Load the model from the local file

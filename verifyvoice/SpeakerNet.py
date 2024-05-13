@@ -11,11 +11,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 import os
 
-from verifyvoice.model.DatasetLoader import test_dataset_loader
-import verifyvoice.model.DatasetLoader
-from verifyvoice.model.loss.deepInfoMaxLoss import DeepInfoMaxLoss
-from verifyvoice.model.models.Baseline.Spk_Encoder import MainModel
-from verifyvoice.model.loss.aamsoftmax import LossFunction
+from .DatasetLoader import test_dataset_loader
+from .deepInfoMaxLoss import DeepInfoMaxLoss
+from .Spk_Encoder import MainModel
+from .aamsoftmax import LossFunction
 
 class WrappedModel(nn.Module):
 

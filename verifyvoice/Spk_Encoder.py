@@ -57,7 +57,7 @@ class spk_extractor(nn.Module):
         self.loadParameters(checkpoint['model'])
         head_nb = kwargs['attention_heads']
         self.backend = MHFA(head_nb=head_nb)
-        print(f"Number of Heads : {head_nb}")
+        # print(f"Number of Heads : {head_nb}")
 
 
     def forward(self,wav_and_flag):

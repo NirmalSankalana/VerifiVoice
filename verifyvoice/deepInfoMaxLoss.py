@@ -1,10 +1,10 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from verifyvoice.model.mine.mine import GlobalDiscriminator
-from verifyvoice.model.mine.mine import LocalDiscriminator
 import numpy as np
-from verifyvoice.model.mine.mine import PriorDiscriminator
+
+from .mine import GlobalDiscriminator, LocalDiscriminator, PriorDiscriminator
+
 
 class DeepInfoMaxLoss(nn.Module):
     def __init__(self, alpha, beta, gamma):

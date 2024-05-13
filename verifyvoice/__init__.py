@@ -1,3 +1,2 @@
-from verifyvoice.ModelLoader import ModelLoader
-from verifyvoice.DataLoader import DataLoader
-from verifyvoice.Similarity import Similarity
+from .ModelLoader import ModelLoader
+from .Similarity import Similarity
