@@ -1,4 +1,7 @@
 import argparse
+import os
+from huggingface_hub import hf_hub_download
+
 
 def get_default_param():
     parser = argparse.ArgumentParser(description="SpeakerNet");
@@ -28,7 +31,7 @@ def get_default_param():
     parser.add_argument("--lr_decay", type=float, default=0.95, help='Learning rate decay every [test_interval] epochs');
 
     # Pre-trained Transformer Model
-    parser.add_argument('--pretrained_model_path', type=str, default="/media/thejan/ubuntu_data/WavLM-Base+.pt", help='Absolute path to the pre-trained model');
+    parser.add_argument('--pretrained_model_path', type=str, default="/home/$USER/.cache/huggingface/hub/models--thejan-fonseka--DeepSpeakerVerifier/snapshots/8d215ef073ee00a5637af677a78e37a0858ad0b1/WavLM-Base+.pt", help='Absolute path to the pre-trained model');
     parser.add_argument('--weight_finetuning_reg', type=float, default=0.01,
                         help='L2 regularization towards the initial pre-trained model');
     parser.add_argument('--LLRD_factor', type=float, default=1.0, help='Layer-wise Learning Rate Decay (LLRD) factor');
@@ -99,5 +102,15 @@ def get_default_param():
 
     args = parser.parse_args();
     args.gpu = 0
+
+    if not os.path.exists(args.pretrained_model_path):
+            # Download the model from Hugging Face if not available locally
+            # model_url = hf_hub_download(repo_id=model_name, filename=f"{model_name}.pt", cache_dir=cache_dir)
+            # os.makedirs(model_path, exist_ok=True)
+        model_file = hf_hub_download(repo_id="thejan-fonseka/DeepSpeakerVerifier", filename="WavLM-Base+.pt")
+        # print(f"downloaded model from hugging face saved to {model_file}")
+        args.pretrained_model_path = model_file
+            # Save the downloaded model to the desired folder
+            # torch.hub.download_url_to_file(model_url, model_file)
     
     return args

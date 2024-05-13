@@ -18,7 +18,7 @@ cache_dir = '/home/$USER/.cache/huggingface/hub/models--thejan-fonseka--DeepSpea
 model_head_mapping = {
     4: "model_h4_dim.model",
     8: "model_h8_dim.model",
-    16: "model_h16_dim.model",
+    16: "model_h16_dim.model"
 }
 
 model_name_download_mapping = {

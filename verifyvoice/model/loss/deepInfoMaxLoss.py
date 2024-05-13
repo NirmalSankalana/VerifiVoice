@@ -15,10 +15,10 @@ class DeepInfoMaxLoss(nn.Module):
         self.alpha = alpha
         self.beta = beta
         self.gamma = gamma
-        print(
-            "Initialised DeepInfoMaxLoss alpha %.4f beta %.4f gamma %.4f"
-            % (self.alpha, self.beta, self.gamma)
-        )
+        # print(
+        #     "Initialised DeepInfoMaxLoss alpha %.4f beta %.4f gamma %.4f"
+        #     % (self.alpha, self.beta, self.gamma)
+        # )
 
     def forward(self, y, M, M_prime):
 
