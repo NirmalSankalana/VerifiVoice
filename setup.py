@@ -35,5 +35,5 @@ setup(
     ],
     packages=["verifyvoice"],
     include_package_data=True,
-    install_requires=["numpy >=1.2", "soundfile >=1"],
+    install_requires=["numpy >=1.2", "soundfile >=0.12.1"],
 )
