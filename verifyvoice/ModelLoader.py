@@ -1,18 +1,60 @@
-import onnx
-
-onnx_model = onnx.load("/home/thejan/Music/model_onnx.onnx")
-onnx.checker.check_model(onnx_model)
-
-
-import onnxruntime as ort
 import numpy as np
+from verifyvoice.DataLoader import DataLoader
+import torch
+from verifyvoice.model.SpeakerNet import SpeakerNet
+import os
+import argparse    
+from huggingface_hub import hf_hub_download
+from verifyvoice.model_args import get_default_param
+import requests
+
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+
+args = get_default_param()
+
+model_path = '/home/$USER/Downloads/models'
+cache_dir = '/home/$USER/.cache/huggingface/hub/models--thejan-fonseka--DeepSpeakerVerifier'
+
+model_head_mapping = {
+    4: "model_h4_dim.model",
+    8: "model_h8_dim.model",
+    16: "model_h16_dim.model"
+}
+
+model_name_download_mapping = {
+    "model_h4_dim.model": "https://huggingface.co/thejan-fonseka/DeepSpeakerVerifier/blob/main/model_h4_dim.model",
+    "model_h8_dim.model": "https://huggingface.co/thejan-fonseka/DeepSpeakerVerifier/blob/main/model_h8_dim.model",
+    "model_h16_dim.model": "https://huggingface.co/thejan-fonseka/DeepSpeakerVerifier/blob/main/model_h16_dim.model",
+}
 
 
-from DataLoader import DataLoader
+class ModelLoader:
+    def __init__(self, model_name, attention_heads=8):
+        args.attention_heads = attention_heads
+        self.model_name = model_head_mapping[attention_heads]
+        self.model_path = model_path
+        self.model =SpeakerNet(**vars(args)).cuda(args.gpu)
+        self.load_model(self.model, self.model_name, self.model_path)
 
-feats = DataLoader.loadWAV("/media/thejan/ubuntu_data/wav_test/id10270/5r0dWxy17C8/00001.wav")
-x = [feats, 'test']
-ort_sess = ort.InferenceSession('/home/thejan/Music/model_onnx.onnx')
-outputs = ort_sess.run(None, {'': x})
-print(outputs)
-print(outputs.shape)
+    def get_embedding(self, audio_path):
+        feats = DataLoader.load_audio(audio_path)
+        feats = torch.FloatTensor(feats)
+        embedding = self.model([feats, 'test'])
+        embedding = embedding.detach().cpu().numpy()
+        return embedding
+
+    def load_model(self, model, model_name, model_path, cache_dir=cache_dir):
+        model_file = os.path.join(model_path, model_name)
+
+        if not os.path.exists(model_file):
+            # Download the model from Hugging Face if not available locally
+            # model_url = hf_hub_download(repo_id=model_name, filename=f"{model_name}.pt", cache_dir=cache_dir)
+            # os.makedirs(model_path, exist_ok=True)
+            print("downloading model")
+            model_file = hf_hub_download(repo_id="thejan-fonseka/DeepSpeakerVerifier", filename=model_name)
+            print(f"downloaded model {model_name} from hugging face saved to {model_file}")
+            # Save the downloaded model to the desired folder
+            # torch.hub.download_url_to_file(model_url, model_file)
+        # Load the model from the local file
+        model.load_state_dict(torch.load(model_file))        
+        model.eval()

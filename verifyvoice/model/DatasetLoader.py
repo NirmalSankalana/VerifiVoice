@@ -22,7 +22,7 @@ def worker_init_fn(worker_id):
     numpy.random.seed(numpy.random.get_state()[1][0] + worker_id)
 
 
-def loadWAV(filename, max_frames, evalmode=True, num_eval=10):
+def loadWAV(filename, max_frames=300, evalmode=False, num_eval=5):
 
     # Maximum audio length
     max_audio = max_frames * 160 + 240
@@ -207,7 +207,6 @@ class test_dataset_loader(Dataset):
             self.test_path, self.test_list[index]), 0, evalmode=True, num_eval=self.num_eval)
 
         return torch.FloatTensor(audio), torch.FloatTensor(audio2), self.test_list[index]
-        # return torch.FloatTensor(audio2), self.test_list[index]
 
     def __len__(self):
         return len(self.test_list)
@@ -232,14 +231,12 @@ class train_dataset_sampler(torch.utils.data.Sampler):
 
         data_dict = {}
 
-        # Sort into dictionary of file indices for each ID
         for index in indices:
             speaker_label = self.data_label[index]
             if not (speaker_label in data_dict):
                 data_dict[speaker_label] = []
             data_dict[speaker_label].append(index)
 
-        # Group file indices for each class
         dictkeys = list(data_dict.keys())
         dictkeys.sort()
 
@@ -258,12 +255,10 @@ class train_dataset_sampler(torch.utils.data.Sampler):
             for indices in rp:
                 flattened_list.append([data[i] for i in indices])
 
-        # Mix data in random order
         mixid = torch.randperm(len(flattened_label), generator=g).tolist()
         mixlabel = []
         mixmap = []
 
-        # Prevent two pairs of the same speaker in the same batch
         for ii in mixid:
             startbatch = round_down(len(mixlabel), self.batch_size)
             if flattened_label[ii] not in mixlabel[startbatch:]:
@@ -272,7 +267,6 @@ class train_dataset_sampler(torch.utils.data.Sampler):
 
         mixed_list = [flattened_list[i] for i in mixmap]
 
-        # Divide data to each GPU
         if self.distributed:
             total_size = round_down(
                 len(mixed_list), self.batch_size * dist.get_world_size())
@@ -295,13 +289,7 @@ class train_dataset_sampler(torch.utils.data.Sampler):
 
 
 if __name__ == '__main__':
-    # train_dataset = train_dataset_loader(train_list='/mnt/h/test_list.txt',
-    #                                      augment=False,
-    #                                      musan_path='/mnt/proj3/open-24-5/pengjy_new/musan_split/',
-    #                                      rir_path='/mnt/proj3/open-24-5/plchot/data_augment/16kHz/simulated_rirs/',
-    #                                      max_frames=300,
-    #                                      train_path='/mnt/h/wav_test/',
-    #                                      )
+
 
     train_dataset = train_dataset_loader(train_list='/home/nipunnirmal/data/train_list.txt',
                                          augment=False,
@@ -314,7 +302,6 @@ if __name__ == '__main__':
 
     train_sampler = train_dataset_sampler(
         train_dataset, nPerSpeaker=1, max_seg_per_spk=500, batch_size=100, distributed=False, seed=120)
-    # train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
@@ -324,7 +311,7 @@ if __name__ == '__main__':
         pin_memory=True,
         drop_last=True,
     )
-    # print(train_loader.__len__)
+
     for data, data_label in train_loader:
         print(data.shape)
         data = data.transpose(1, 0)

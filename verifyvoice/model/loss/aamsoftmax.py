@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from utils import accuracy
+from verifyvoice.model.utils import accuracy
 
 
 class LossFunction(nn.Module):
@@ -32,7 +32,7 @@ class LossFunction(nn.Module):
         self.th = math.cos(math.pi - self.m)
         self.mm = math.sin(math.pi - self.m) * self.m
 
-        print('Initialised AAMSoftmax margin %.3f scale %.3f'%(self.m,self.s))
+        # print('Initialised AAMSoftmax margin %.3f scale %.3f'%(self.m,self.s))
 
     def forward(self, x, label=None):
 
