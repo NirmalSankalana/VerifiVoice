@@ -35,8 +35,8 @@ class ModelLoader:
         self.model =SpeakerNet(**args).to(args['device'])
         self.load_model(self.model, self.model_name, self.model_path)
 
-    def get_embedding(self, audio_path):
-        feats = DataLoader.load_audio(audio_path)
+    def get_embedding(self, audio_path, evamode=True, num_eval=5):
+        feats = DataLoader.load_audio(filename=audio_path, evalmode=evamode, num_eval=num_eval)
         feats = torch.FloatTensor(feats)
         embedding = self.model([feats, 'test'])
         embedding = embedding.detach().cpu().numpy()
@@ -56,4 +56,5 @@ class ModelLoader:
             # torch.hub.download_url_to_file(model_url, model_file)
         # Load the model from the local file
         model.load_state_dict(torch.load(model_file, map_location=torch.device(args['device'])))        
+        # self.loadParameters(torch.load(model_file, map_location=torch.device(args['device'])), model)
         model.eval()
