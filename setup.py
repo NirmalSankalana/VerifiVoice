@@ -14,7 +14,7 @@ with open(path.join(HERE, 'README.md'), encoding='utf-8') as f:
 # This call to setup() does all the work
 setup(
     name="verifyvoice",
-    version="0.1.32",
+    version="0.1.33",
     description="A package for verifying the voice of a person",
     long_description=long_description,
     long_description_content_type="text/markdown",
