@@ -1,14 +1,25 @@
-import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.nn import LayerNorm
 from .WavLM import *
 
 import torch
 import torch.nn as nn
 
 class MHFA(nn.Module):
+    """
+    MHFA class for Multi-Head Feature Aggregation.
+
+    forward:
+    Perform the forward pass of the MHFA model.
+
+    Args:
+        x: Input tensor.
+
+    Returns:
+        Output tensor after feature aggregation.
+    """
+
     def __init__(self, head_nb=8, inputs_dim=768, compression_dim=128, outputs_dim=256):
         super(MHFA, self).__init__()
 
@@ -48,16 +59,30 @@ class MHFA(nn.Module):
 
 
 class spk_extractor(nn.Module):
-    def __init__(self,**kwargs):
+    """
+    spk_extractor class for speaker feature extraction.
+
+    forward:
+    Perform the forward pass of the spk_extractor model.
+
+    Args:
+        wav_and_flag: Input tensor containing audio data and flag.
+
+    Returns:
+        Output tensor and last layer representation.
+    """
+
+    def __init__(self,device,**kwargs):
         super(spk_extractor, self).__init__()
         # print("Pre-trained Model: {}".format(kwargs['pretrained_model_path']))
-        checkpoint = torch.load(kwargs['pretrained_model_path'])
+        checkpoint = torch.load(kwargs['pretrained_model_path'], map_location=torch.device(device))
         cfg = WavLMConfig(checkpoint['cfg'])
+        # cfg = WavLMConfig()
         self.model = WavLM(cfg)
         self.loadParameters(checkpoint['model'])
         head_nb = kwargs['attention_heads']
         self.backend = MHFA(head_nb=head_nb)
-        print(f"Number of Heads : {head_nb}")
+        # print(f"Number of Heads : {head_nb}")
 
 
     def forward(self,wav_and_flag):
@@ -87,6 +112,6 @@ class spk_extractor(nn.Module):
                 continue;
             self_state[name].copy_(param);
 
-def MainModel(**kwargs):
-    model = spk_extractor(**kwargs)
+def MainModel(device,**kwargs):
+    model = spk_extractor(device, **kwargs)
     return model
