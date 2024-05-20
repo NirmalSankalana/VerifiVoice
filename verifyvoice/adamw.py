@@ -1,10 +1,10 @@
-#! /usr/bin/python
-# -*- encoding: utf-8 -*-
-import torch
+# #! /usr/bin/python
+# # -*- encoding: utf-8 -*-
+# import torch
 
 
-def Optimizer(parameters, lr, **kwargs):
+# def Optimizer(parameters, lr, **kwargs):
 
-	print('Initialised Adam optimizer')
+# 	print('Initialised Adam optimizer')
 
-	return torch.optim.AdamW(parameters, lr = lr);
+# 	return torch.optim.AdamW(parameters, lr = lr);

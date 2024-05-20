@@ -1,17 +1,17 @@
-#! /usr/bin/python
-# -*- encoding: utf-8 -*-
+# #! /usr/bin/python
+# # -*- encoding: utf-8 -*-
 
-import torch
+# import torch
 
 
-def Scheduler(optimizer, test_interval, max_epoch, lr_decay, **kwargs):
+# def Scheduler(optimizer, test_interval, max_epoch, lr_decay, **kwargs):
 
-	sche_fn = torch.optim.lr_scheduler.StepLR(optimizer, step_size=test_interval, gamma=lr_decay)
+# 	sche_fn = torch.optim.lr_scheduler.StepLR(optimizer, step_size=test_interval, gamma=lr_decay)
 
-	lr_step = 'epoch'
+# 	lr_step = 'epoch'
 
-	print('Initialised step LR scheduler')
+# 	print('Initialised step LR scheduler')
 
-	return sche_fn, lr_step
+# 	return sche_fn, lr_step
 
 

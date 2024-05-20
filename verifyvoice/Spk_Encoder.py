@@ -51,10 +51,11 @@ class spk_extractor(nn.Module):
     def __init__(self,device,**kwargs):
         super(spk_extractor, self).__init__()
         # print("Pre-trained Model: {}".format(kwargs['pretrained_model_path']))
-        checkpoint = torch.load(kwargs['pretrained_model_path'], map_location=torch.device(device))
-        cfg = WavLMConfig(checkpoint['cfg'])
+        # checkpoint = torch.load(kwargs['pretrained_model_path'], map_location=torch.device(device))
+        # cfg = WavLMConfig(checkpoint['cfg'])
+        cfg = WavLMConfig()
         self.model = WavLM(cfg)
-        self.loadParameters(checkpoint['model'])
+        # self.loadParameters(checkpoint['model'])
         head_nb = kwargs['attention_heads']
         self.backend = MHFA(head_nb=head_nb)
         # print(f"Number of Heads : {head_nb}")

@@ -11,7 +11,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import os
 
-from .DatasetLoader import test_dataset_loader
+# from .DatasetLoader import test_dataset_loader
 from .deepInfoMaxLoss import DeepInfoMaxLoss
 from .Spk_Encoder import MainModel
 from .aamsoftmax import LossFunction
@@ -75,255 +75,255 @@ class SpeakerNet(nn.Module):
             return t_loss, prec1, nloss
 
 
-class ModelTrainer(object):
+# class ModelTrainer(object):
 
-    def __init__(self, speaker_model, optimizer, scheduler, gpu, mixedprec, **kwargs):
+#     def __init__(self, speaker_model, optimizer, scheduler, gpu, mixedprec, **kwargs):
 
-        self.__model__ = speaker_model
+#         self.__model__ = speaker_model
     
-        WavLM_params = list(map(id, self.__model__.module.__S__.model.parameters()))
-        DIM_params = list(map(id, self.__model__.module.__DIM_L__.parameters()))
-        Backend_params = filter(lambda p: id(p) not in WavLM_params and id(p) not in DIM_params, self.__model__.module.parameters())
+#         WavLM_params = list(map(id, self.__model__.module.__S__.model.parameters()))
+#         DIM_params = list(map(id, self.__model__.module.__DIM_L__.parameters()))
+#         Backend_params = filter(lambda p: id(p) not in WavLM_params and id(p) not in DIM_params, self.__model__.module.parameters())
 
-        self.path = kwargs['pretrained_model_path']
+#         self.path = kwargs['pretrained_model_path']
 
-        Optimizer = importlib.import_module(f'optimizer.{optimizer}').__getattribute__('Optimizer')
+#         Optimizer = importlib.import_module(f'optimizer.{optimizer}').__getattribute__('Optimizer')
 
-        param_groups = [{'params': Backend_params, 'lr': kwargs['LR_MHFA']}]
+#         param_groups = [{'params': Backend_params, 'lr': kwargs['LR_MHFA']}]
 
-        encoder_layers = self.__model__.module.__S__.model.encoder.layers
+#         encoder_layers = self.__model__.module.__S__.model.encoder.layers
 
-        for i in range(12):  # Assuming 12 layers from 0 to 11 (for BASE model, when it comes to LARGE model, 12->24)
-            lr = kwargs['LR_Transformer'] * (kwargs['LLRD_factor'] ** i)
-            param_groups.append({'params': encoder_layers[i].parameters(), 'lr': lr})
+#         for i in range(12):  # Assuming 12 layers from 0 to 11 (for BASE model, when it comes to LARGE model, 12->24)
+#             lr = kwargs['LR_Transformer'] * (kwargs['LLRD_factor'] ** i)
+#             param_groups.append({'params': encoder_layers[i].parameters(), 'lr': lr})
 
-        self.__optimizer__ = Optimizer(param_groups, **kwargs)
-        self.__optimizer__dim__ = Optimizer(self.__model__.module.__DIM_L__.parameters(), lr=1e-4)
+#         self.__optimizer__ = Optimizer(param_groups, **kwargs)
+#         self.__optimizer__dim__ = Optimizer(self.__model__.module.__DIM_L__.parameters(), lr=1e-4)
 
-        # self.__optimizer__ = Optimizer(self.__model__.parameters(), **kwargs)
+#         # self.__optimizer__ = Optimizer(self.__model__.parameters(), **kwargs)
 
-        Scheduler = importlib.import_module(f'scheduler.{scheduler}').__getattribute__('Scheduler')
-        self.__scheduler__, self.lr_step = Scheduler(self.__optimizer__, **kwargs)
-        # self.__scheduler__dim__, self.lr_step_dim = Scheduler(self.__optimizer__dim__, **kwargs)
+#         Scheduler = importlib.import_module(f'scheduler.{scheduler}').__getattribute__('Scheduler')
+#         self.__scheduler__, self.lr_step = Scheduler(self.__optimizer__, **kwargs)
+#         # self.__scheduler__dim__, self.lr_step_dim = Scheduler(self.__optimizer__dim__, **kwargs)
 
-        self.gpu = gpu
-        self.mixedprec = mixedprec
-        print(f"Mix prec: {self.mixedprec}")
+#         self.gpu = gpu
+#         self.mixedprec = mixedprec
+#         print(f"Mix prec: {self.mixedprec}")
 
-        assert self.lr_step in ['epoch', 'iteration']
+#         assert self.lr_step in ['epoch', 'iteration']
 
-    # ## ===== ===== ===== ===== ===== ===== ===== =====
-    # ## Train network
-    # ## ===== ===== ===== ===== ===== ===== ===== =====
-    def train_network(self, loader, verbose):
+#     # ## ===== ===== ===== ===== ===== ===== ===== =====
+#     # ## Train network
+#     # ## ===== ===== ===== ===== ===== ===== ===== =====
+#     def train_network(self, loader, verbose):
 
-        self.__model__.train();
+#         self.__model__.train();
 
-        stepsize = loader.batch_size;
+#         stepsize = loader.batch_size;
 
-        counter = 0;
-        index = 0;
-        loss = 0;
-        top1 = 0  # EER or accuracy
+#         counter = 0;
+#         index = 0;
+#         loss = 0;
+#         top1 = 0  # EER or accuracy
 
-        tstart = time.time()
-        Learned_dict = {}
-        checkpoint = torch.load(self.path)
-        for name, param in checkpoint['model'].items():
-            if 'w2v_encoder.w2v_model.' in name:
-                newname = name.replace('w2v_encoder.w2v_model.', '')
-            else:
-                newname = name
-            Learned_dict[newname] = param;
+#         tstart = time.time()
+#         Learned_dict = {}
+#         checkpoint = torch.load(self.path)
+#         for name, param in checkpoint['model'].items():
+#             if 'w2v_encoder.w2v_model.' in name:
+#                 newname = name.replace('w2v_encoder.w2v_model.', '')
+#             else:
+#                 newname = name
+#             Learned_dict[newname] = param;
 
-        for data, data_label in loader:
-            data = data.transpose(1, 0)
-            self.__model__.zero_grad()
-            label = torch.LongTensor(data_label).cuda()
+#         for data, data_label in loader:
+#             data = data.transpose(1, 0)
+#             self.__model__.zero_grad()
+#             label = torch.LongTensor(data_label).cuda()
 
-            nloss, prec1, spkloss = self.__model__([data, "train"], label, Learned_dict)
+#             nloss, prec1, spkloss = self.__model__([data, "train"], label, Learned_dict)
 
-            nloss.backward();
+#             nloss.backward();
 
-            self.__optimizer__.step();
-            self.__optimizer__dim__.step();
+#             self.__optimizer__.step();
+#             self.__optimizer__dim__.step();
 
-            loss += spkloss.detach().cpu()
-            top1 += prec1.detach().cpu()
+#             loss += spkloss.detach().cpu()
+#             top1 += prec1.detach().cpu()
 
-            counter += 1;
-            index += stepsize;
+#             counter += 1;
+#             index += stepsize;
 
-            telapsed = time.time() - tstart
-            tstart = time.time()
+#             telapsed = time.time() - tstart
+#             tstart = time.time()
 
-            if verbose:
-                sys.stdout.write("\rProcessing (%d) " % (index));
-                sys.stdout.write(
-                    "Loss %f TEER/TAcc %2.3f%% - %.2f Hz " % (loss / counter, top1 / counter, stepsize / telapsed));
-                sys.stdout.flush();
-                # print(f"\nIteration: {counter}, loss not divide: {loss}, Loss: {loss / counter:.4f}, top not divide {top1}, Top1: {top1 / counter}%")
+#             if verbose:
+#                 sys.stdout.write("\rProcessing (%d) " % (index));
+#                 sys.stdout.write(
+#                     "Loss %f TEER/TAcc %2.3f%% - %.2f Hz " % (loss / counter, top1 / counter, stepsize / telapsed));
+#                 sys.stdout.flush();
+#                 # print(f"\nIteration: {counter}, loss not divide: {loss}, Loss: {loss / counter:.4f}, top not divide {top1}, Top1: {top1 / counter}%")
 
-            if self.lr_step == 'iteration': self.__scheduler__.step()
+#             if self.lr_step == 'iteration': self.__scheduler__.step()
 
-        if self.lr_step == 'epoch': self.__scheduler__.step()
+#         if self.lr_step == 'epoch': self.__scheduler__.step()
 
-        sys.stdout.write("\n");
+#         sys.stdout.write("\n");
 
-        return (loss / counter, top1 / counter);
+#         return (loss / counter, top1 / counter);
 
-    # ===== ===== ===== ===== ===== ===== ===== =====
-    # Evaluate from list
-    # ===== ===== ===== ===== ===== ===== ===== =====
-    def evaluateFromList(self, test_list, test_path, nDataLoaderThread, print_interval=10, num_eval=5, test_list_percentage=1.0,**kwargs):
+#     # ===== ===== ===== ===== ===== ===== ===== =====
+#     # Evaluate from list
+#     # ===== ===== ===== ===== ===== ===== ===== =====
+#     def evaluateFromList(self, test_list, test_path, nDataLoaderThread, print_interval=10, num_eval=5, test_list_percentage=1.0,**kwargs):
 
-        self.__model__.eval();
+#         self.__model__.eval();
 
-        lines = []
-        files = []
-        feats = {}
-        tstart = time.time()
+#         lines = []
+#         files = []
+#         feats = {}
+#         tstart = time.time()
 
-        # Read all lines
-        with open(test_list) as f:
-            lines = f.readlines()
+#         # Read all lines
+#         with open(test_list) as f:
+#             lines = f.readlines()
 
-        num_samples = int(len(lines) * test_list_percentage)
-        print(f"test datset : {len(lines)}")
-        print(f"num_samples: {num_samples}")
+#         num_samples = int(len(lines) * test_list_percentage)
+#         print(f"test datset : {len(lines)}")
+#         print(f"num_samples: {num_samples}")
 
-        print('After Reading')
+#         print('After Reading')
 
-        # Get a list of unique file names
-        files = sum([x.strip().split()[-2:] for x in lines[: num_samples]], [])
-        setfiles = list(set(files))
-        setfiles.sort()
-        print('After sorting')
+#         # Get a list of unique file names
+#         files = sum([x.strip().split()[-2:] for x in lines[: num_samples]], [])
+#         setfiles = list(set(files))
+#         setfiles.sort()
+#         print('After sorting')
 
-        # Define test data loader
-        test_dataset = test_dataset_loader(setfiles, test_path, num_eval=num_eval, **kwargs)
-        test_loader = torch.utils.data.DataLoader(
-            test_dataset,
-            batch_size=1,
-            shuffle=False,
-            num_workers=nDataLoaderThread,
-            drop_last=False,
-        )
-        ref_feat_list = []
-        ref_feat_2_list = []
-        max_len = 0
-        forward = 0
-        # Extract features for every image
-        for idx, data in enumerate(test_loader):
+#         # Define test data loader
+#         test_dataset = test_dataset_loader(setfiles, test_path, num_eval=num_eval, **kwargs)
+#         test_loader = torch.utils.data.DataLoader(
+#             test_dataset,
+#             batch_size=1,
+#             shuffle=False,
+#             num_workers=nDataLoaderThread,
+#             drop_last=False,
+#         )
+#         ref_feat_list = []
+#         ref_feat_2_list = []
+#         max_len = 0
+#         forward = 0
+#         # Extract features for every image
+#         for idx, data in enumerate(test_loader):
 
-            inp1 = data[0][0].cuda()
-            inp2 = data[1][0].cuda()
+#             inp1 = data[0][0].cuda()
+#             inp2 = data[1][0].cuda()
            
-            telapsed_2 = time.time()
-            b, utt_l = inp2.shape
-            if utt_l > max_len:
-                max_len = utt_l
-            ref_feat = self.__model__([inp1, "test"]).cuda()
+#             telapsed_2 = time.time()
+#             b, utt_l = inp2.shape
+#             if utt_l > max_len:
+#                 max_len = utt_l
+#             ref_feat = self.__model__([inp1, "test"]).cuda()
 
-            ref_feat = ref_feat.detach().cpu()
+#             ref_feat = ref_feat.detach().cpu()
 
-            ref_feat_2 = self.__model__(
-                [inp2[:, :700000], "test"]).cuda()  # The reason why here is set to 700000 is due to GPU memory size.
-            ref_feat_2 = ref_feat_2.detach().cpu()
+#             ref_feat_2 = self.__model__(
+#                 [inp2[:, :700000], "test"]).cuda()  # The reason why here is set to 700000 is due to GPU memory size.
+#             ref_feat_2 = ref_feat_2.detach().cpu()
 
-            feats[data[2][0]] = [ref_feat, ref_feat_2]
+#             feats[data[2][0]] = [ref_feat, ref_feat_2]
 
-            ref_feat_list.extend(ref_feat.numpy())
-            ref_feat_2_list.extend(ref_feat_2.numpy())
+#             ref_feat_list.extend(ref_feat.numpy())
+#             ref_feat_2_list.extend(ref_feat_2.numpy())
 
-            telapsed = time.time() - tstart
-            forward = forward + time.time() - telapsed_2
+#             telapsed = time.time() - tstart
+#             forward = forward + time.time() - telapsed_2
 
-            if idx % print_interval == 0:
-                sys.stdout.write(
-                    "\rReading %d of %d: %.2f Hz, forward speed: %.2f Hz, embedding size %d, max_len %d" % (
-                        idx, len(setfiles), idx / telapsed, idx / forward, ref_feat.size()[-1], max_len));
+#             if idx % print_interval == 0:
+#                 sys.stdout.write(
+#                     "\rReading %d of %d: %.2f Hz, forward speed: %.2f Hz, embedding size %d, max_len %d" % (
+#                         idx, len(setfiles), idx / telapsed, idx / forward, ref_feat.size()[-1], max_len));
 
-        print('')
-        all_scores = [];
-        all_labels = [];
-        all_trials = [];
-        all_scores_1 = [];
-        all_scores_2 = [];
+#         print('')
+#         all_scores = [];
+#         all_labels = [];
+#         all_trials = [];
+#         all_scores_1 = [];
+#         all_scores_2 = [];
 
-        tstart = time.time()
+#         tstart = time.time()
 
-        ref_feat_list = numpy.array(ref_feat_list)
-        ref_feat_2_list = numpy.array(ref_feat_2_list)
+#         ref_feat_list = numpy.array(ref_feat_list)
+#         ref_feat_2_list = numpy.array(ref_feat_2_list)
 
-        ref_feat_list_mean = 0
-        ref_feat_2_list_mean = 0
+#         ref_feat_list_mean = 0
+#         ref_feat_2_list_mean = 0
 
-        # Read files and compute all scores
-        for idx, line in enumerate(lines):
+#         # Read files and compute all scores
+#         for idx, line in enumerate(lines):
 
-            data = line.split();
+#             data = line.split();
 
-            # Append random label if missing
-            if len(data) == 2: data = [random.randint(0, 1)] + data
+#             # Append random label if missing
+#             if len(data) == 2: data = [random.randint(0, 1)] + data
 
-            ref_feat, ref_feat_2 = feats[data[1]]
-            com_feat, com_feat_2 = feats[data[2]]
+#             ref_feat, ref_feat_2 = feats[data[1]]
+#             com_feat, com_feat_2 = feats[data[2]]
 
-            # if self.__model__.module.__L__.test_normalize:
-            ref_feat = F.normalize(ref_feat - ref_feat_list_mean, p=2, dim=1)  # B, D
-            com_feat = F.normalize(com_feat - ref_feat_list_mean, p=2, dim=1)
-            ref_feat_2 = F.normalize(ref_feat_2 - ref_feat_2_list_mean, p=2, dim=1)  # B, D
-            com_feat_2 = F.normalize(com_feat_2 - ref_feat_2_list_mean, p=2, dim=1)
+#             # if self.__model__.module.__L__.test_normalize:
+#             ref_feat = F.normalize(ref_feat - ref_feat_list_mean, p=2, dim=1)  # B, D
+#             com_feat = F.normalize(com_feat - ref_feat_list_mean, p=2, dim=1)
+#             ref_feat_2 = F.normalize(ref_feat_2 - ref_feat_2_list_mean, p=2, dim=1)  # B, D
+#             com_feat_2 = F.normalize(com_feat_2 - ref_feat_2_list_mean, p=2, dim=1)
 
-            score_1 = torch.mean(torch.matmul(ref_feat, com_feat.T))  # higher is positive
-            score_2 = torch.mean(torch.matmul(ref_feat_2, com_feat_2.T))
-            score = (score_1 + score_2) / 2
-            score = score.detach().cpu().numpy()
+#             score_1 = torch.mean(torch.matmul(ref_feat, com_feat.T))  # higher is positive
+#             score_2 = torch.mean(torch.matmul(ref_feat_2, com_feat_2.T))
+#             score = (score_1 + score_2) / 2
+#             score = score.detach().cpu().numpy()
 
-            all_scores.append(score);
-            all_scores_1.append(score_1);
-            all_scores_2.append(score_2);
+#             all_scores.append(score);
+#             all_scores_1.append(score_1);
+#             all_scores_2.append(score_2);
 
-            all_labels.append(int(data[0]));
-            all_trials.append(data[1] + " " + data[2])
+#             all_labels.append(int(data[0]));
+#             all_trials.append(data[1] + " " + data[2])
 
-            if idx % (10 * print_interval) == 0:
-                telapsed = time.time() - tstart
-                sys.stdout.write("\rComputing %d of %d: %.2f Hz" % (idx, len(lines), idx / telapsed));
-                sys.stdout.flush();
+#             if idx % (10 * print_interval) == 0:
+#                 telapsed = time.time() - tstart
+#                 sys.stdout.write("\rComputing %d of %d: %.2f Hz" % (idx, len(lines), idx / telapsed));
+#                 sys.stdout.flush();
 
-        print('')
+#         print('')
 
-        return all_scores, all_labels, all_trials, all_scores_1, all_scores_2;
+#         return all_scores, all_labels, all_trials, all_scores_1, all_scores_2;
 
-    def saveParameters(self, path):
-        torch.save(self.__model__.module.state_dict(), path);
+#     def saveParameters(self, path):
+#         torch.save(self.__model__.module.state_dict(), path);
     
-    def save_model(self, path):
-        torch.save(self.__model__, path);
+#     def save_model(self, path):
+#         torch.save(self.__model__, path);
 
-    # ===== ===== ===== ===== ===== ===== ===== =====
-    # Load parameters
-    # ===== ===== ===== ===== ===== ===== ===== =====
-    def loadParameters(self, path):
+#     # ===== ===== ===== ===== ===== ===== ===== =====
+#     # Load parameters
+#     # ===== ===== ===== ===== ===== ===== ===== =====
+#     def loadParameters(self, path):
 
-        self_state = self.__model__.module.state_dict();
-        loaded_state = torch.load(path, map_location="cuda:%d" % self.gpu);
+#         self_state = self.__model__.module.state_dict();
+#         loaded_state = torch.load(path, map_location="cuda:%d" % self.gpu);
     
-        for name, param in loaded_state.items():
-            origname = name;
+#         for name, param in loaded_state.items():
+#             origname = name;
 
-            if name not in self_state:
-                name = name.replace("module.", "");
+#             if name not in self_state:
+#                 name = name.replace("module.", "");
 
-            if name not in self_state:
-                print(f"{origname} is not in the model.");
-                continue;
+#             if name not in self_state:
+#                 print(f"{origname} is not in the model.");
+#                 continue;
 
-            if self_state[name].size() != loaded_state[origname].size():
-                print(
-                    f"Wrong parameter length: {origname}, model: {self_state[name].size()}, loaded: {loaded_state[origname].size()}");
-                continue;
+#             if self_state[name].size() != loaded_state[origname].size():
+#                 print(
+#                     f"Wrong parameter length: {origname}, model: {self_state[name].size()}, loaded: {loaded_state[origname].size()}");
+#                 continue;
 
-            self_state[name].copy_(param);
+#             self_state[name].copy_(param);
