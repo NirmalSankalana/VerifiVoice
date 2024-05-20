@@ -14,7 +14,7 @@ with open(path.join(HERE, 'README.md'), encoding='utf-8') as f:
 # This call to setup() does all the work
 setup(
     name="verifyvoice",
-    version="0.1.27",
+    version="0.1.28",
     description="A package for verifying the voice of a person",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -35,5 +35,5 @@ setup(
     ],
     packages=["verifyvoice"],
     include_package_data=True,
-    install_requires=["numpy >=1.2", "soundfile >=0.12.1", "webrtcvad==2.0.10","librosa","noisereduce==3.0.2"],
+    install_requires=["numpy >=1.2", "soundfile >=0.12.1", "webrtcvad==2.0.10", "librosa"],
 )

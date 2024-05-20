@@ -25,7 +25,7 @@ def get_default_param():
             'scheduler': 'steplr', 
             'lr': 0.001, 
             'lr_decay': 0.95, 
-            'pretrained_model_path': '/home/$USER/.cache/huggingface/hub/models--thejan-fonseka--DeepSpeakerVerifier/snapshots/8d215ef073ee00a5637af677a78e37a0858ad0b1/WavLM-Base+.pt', 
+            'pretrained_model_path': '/home/$USER/.cache/huggingface/hub/models--thejan-fonseka--DeepSpeakerVerifier/snapshots/*/WavLM-Base+.pt', 
             'weight_finetuning_reg': 0.01, 
             'LLRD_factor': 1.0, 
             'LR_Transformer': 2e-05, 
@@ -66,10 +66,6 @@ def get_default_param():
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     args['device'] = device
-
-    if not os.path.exists(args["pretrained_model_path"]):
-        model_file = hf_hub_download(repo_id="thejan-fonseka/DeepSpeakerVerifier", filename="WavLM-Base+.pt")
-        args["pretrained_model_path"] = model_file
 
     return args
 
