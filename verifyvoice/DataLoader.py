@@ -4,7 +4,7 @@ import soundfile as sf
 import numpy as np
 import librosa
 import struct
-import noisereduce as nr
+
 
 class DataLoader:
     """
@@ -65,7 +65,7 @@ class DataLoader:
                 speech_data = np.concatenate(speech_frames)
             else:
                 speech_data = np.array([])
-        
+        # else:
         speech_data = audio
 
         # Handle empty speech data

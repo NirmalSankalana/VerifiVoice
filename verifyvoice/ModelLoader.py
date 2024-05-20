@@ -1,10 +1,8 @@
-import numpy as np
 from .DataLoader import DataLoader
 import torch
 import os
 from huggingface_hub import hf_hub_download
 from .model_args import get_default_param
-import requests
 from .SpeakerNet import SpeakerNet
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -117,8 +115,8 @@ class ModelLoader:
             model_file = hf_hub_download(repo_id="thejan-fonseka/DeepSpeakerVerifier", filename=model_name)
             
         # Load the model from the local file
-        # model.load_state_dict(torch.load(model_file, map_location=torch.device(args['device'])))        
-        self.loadParameters(torch.load(model_file, map_location=torch.device(args['device'])))
+        model.load_state_dict(torch.load(model_file, map_location=torch.device(args['device'])))        
+        # self.loadParameters(torch.load(model_file, map_location=torch.device(args['device'])))
         model.eval()
     
     def get_threshold(self):

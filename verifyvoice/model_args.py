@@ -67,6 +67,10 @@ def get_default_param():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     args['device'] = device
 
+    if not os.path.exists(args["pretrained_model_path"]):
+        model_file = hf_hub_download(repo_id="thejan-fonseka/DeepSpeakerVerifier", filename="WavLM-Base+.pt")
+        args["pretrained_model_path"] = model_file
+
     return args
 
 if __name__ == "__main__":
