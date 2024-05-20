@@ -9,6 +9,19 @@ import torch
 import torch.nn as nn
 
 class MHFA(nn.Module):
+    """
+    MHFA class for Multi-Head Feature Aggregation.
+
+    forward:
+    Perform the forward pass of the MHFA model.
+
+    Args:
+        x: Input tensor.
+
+    Returns:
+        Output tensor after feature aggregation.
+    """
+
     def __init__(self, head_nb=8, inputs_dim=768, compression_dim=128, outputs_dim=256):
         super(MHFA, self).__init__()
 
@@ -48,6 +61,19 @@ class MHFA(nn.Module):
 
 
 class spk_extractor(nn.Module):
+    """
+    spk_extractor class for speaker feature extraction.
+
+    forward:
+    Perform the forward pass of the spk_extractor model.
+
+    Args:
+        wav_and_flag: Input tensor containing audio data and flag.
+
+    Returns:
+        Output tensor and last layer representation.
+    """
+
     def __init__(self,device,**kwargs):
         super(spk_extractor, self).__init__()
         # print("Pre-trained Model: {}".format(kwargs['pretrained_model_path']))

@@ -27,6 +27,21 @@ class WrappedModel(nn.Module):
     
 
 class SpeakerNet(nn.Module):
+    """
+    SpeakerNet class for speaker recognition neural network.
+
+    forward:
+    Forward pass of the SpeakerNet model.
+
+    Args:
+        data: Input data for the model.
+        label: Labels for the input data (default is None).
+        l2_reg_dict: Dictionary for L2 regularization (default is None).
+
+    Returns:
+        Total loss, precision, and classification loss.
+    """
+
 
     def __init__(self, model, optimizer, trainfunc, nPerSpeaker, device, **kwargs):
         super(SpeakerNet, self).__init__();

@@ -28,7 +28,7 @@ model_name_download_mapping = {
 
 model_threshold = {
     4: 0.24,
-    8: 0.22,
+    8: 0.23,
     16: 0.21
 }
 
@@ -114,13 +114,8 @@ class ModelLoader:
 
         if not os.path.exists(model_file):
             # Download the model from Hugging Face if not available locally
-            # model_url = hf_hub_download(repo_id=model_name, filename=f"{model_name}.pt", cache_dir=cache_dir)
-            # os.makedirs(model_path, exist_ok=True)
-            # print("downloading model")
             model_file = hf_hub_download(repo_id="thejan-fonseka/DeepSpeakerVerifier", filename=model_name)
-            # print(f"downloaded model {model_name} from hugging face saved to {model_file}")
-            # Save the downloaded model to the desired folder
-            # torch.hub.download_url_to_file(model_url, model_file)
+            
         # Load the model from the local file
         # model.load_state_dict(torch.load(model_file, map_location=torch.device(args['device'])))        
         self.loadParameters(torch.load(model_file, map_location=torch.device(args['device'])))
