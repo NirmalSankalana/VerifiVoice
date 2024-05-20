@@ -16,10 +16,10 @@ emb2 = model.get_embedding(spk_1_audio_2_path)
 emb3 = model.get_embedding(spk_2_audio_1_path)
 emb4 = model.get_embedding(spk_1_audio_3_path)
 
-print(f"{emb1.shape} {emb2.shape}")
+# print(f"{emb1.shape} {emb2.shape}")
 
 embe =  np.zeros((10, 256), dtype=np.float64)
-print(emb4)
+# print(emb4)
 
 
 print(Similarity.cosine_similarity(emb1, emb2).mean())

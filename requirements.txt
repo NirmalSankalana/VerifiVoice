@@ -29,3 +29,4 @@ soundfile==0.12.1
 twine==5.0.0
 urllib3==2.2.1
 zipp==3.18.1
+webrtcvad==2.0.10

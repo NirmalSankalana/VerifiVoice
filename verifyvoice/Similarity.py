@@ -28,6 +28,5 @@ class Similarity:
         Returns:
             Mean of the cosine similarity between the two vectors.
         """
-        similarity = cosine_similarity(a, b)
-        # print(f"{similarity=} {similarity.shape=}")
-        return similarity.mean()
+    
+        return cosine_similarity(a, b).mean()
